@@ -1,0 +1,16 @@
+# Spalten und Fremdschlüssel der Tabellen in data/
+formulations:
+  key: formulation_id
+  required: [formulation_id, source_type, source_id]
+  enums: {source_type: [paper, own_experiment, simulation]}
+components:
+  required: [formulation_id, component, role]
+  refs: {formulation_id: formulations.formulation_id, component: vocab/components.component}
+process:
+  required: [formulation_id, parameter, value]
+  refs: {formulation_id: formulations.formulation_id, parameter: vocab/process_parameters.parameter}
+measurements:
+  key: measurement_id
+  required: [measurement_id, formulation_id, property, value, source_id]
+  refs: {formulation_id: formulations.formulation_id, property: vocab/properties.property}
+  enums: {extraction: ["", text, table, figure_estimate, own_measurement], error_type: ["", sd, sem, ci95, range]}

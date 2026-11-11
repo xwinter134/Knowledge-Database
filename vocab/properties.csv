@@ -1,0 +1,11 @@
+property,canonical_unit,description
+size_z_avg,nm,DLS Z-average hydrodynamischer Durchmesser
+pdi,1,Polydispersitätsindex (DLS)
+zeta_potential,mV,Zetapotential
+encapsulation_efficiency,%,Verkapselungseffizienz (z. B. RiboGreen)
+apparent_pka,1,Scheinbarer pKa (TNS-Assay)
+saxs_d_spacing,nm,Charakteristischer Abstand aus SAXS-Peak
+saxs_rg,nm,Gyrationsradius aus SAXS (Guinier)
+transfection_efficiency,%,Anteil transfizierter Zellen in vitro
+protein_expression,a.u.,Reporterexpression (z. B. Luciferase)
+cell_viability,%,Zellviabilität

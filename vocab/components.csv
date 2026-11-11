@@ -1,0 +1,11 @@
+component,class,synonyms,smiles,notes
+DLin-MC3-DMA,ionizable_lipid,MC3|Dlin-MC3-DMA,,
+SM-102,ionizable_lipid,,,
+ALC-0315,ionizable_lipid,,,
+DSPC,helper_lipid,"1,2-distearoyl-sn-glycero-3-phosphocholine",,
+DOPE,helper_lipid,"1,2-dioleoyl-sn-glycero-3-phosphoethanolamine",,
+cholesterol,sterol,Chol,,
+DMG-PEG2000,peg_lipid,PEG-DMG|DMG-PEG 2000,,
+ALC-0159,peg_lipid,,,
+mRNA,cargo,,,
+siRNA,cargo,,,

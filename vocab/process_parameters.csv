@@ -1,0 +1,10 @@
+parameter,canonical_unit,description
+mixing_method,,microfluidic | t-junction | pipette | ethanol_injection | other
+total_flow_rate,mL/min,Gesamtflussrate
+flow_rate_ratio,1,Aqueous:Organic Flussverhältnis
+np_ratio,1,N/P-Verhältnis
+lipid_concentration,mM,Lipidkonzentration organische Phase
+buffer,,Puffer der wässrigen Phase
+buffer_ph,1,pH der wässrigen Phase
+dialysis_buffer,,Endpuffer nach Dialyse/TFF
+storage_temperature,°C,Lagertemperatur

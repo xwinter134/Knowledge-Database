@@ -1,0 +1,45 @@
+# Pflichtfelder im YAML-Frontmatter je Notiztyp (geprüft von tools/validate.py)
+common: [id, type, title, created, tags]
+types:
+  paper:
+    dir: literature
+    required: [authors, year, doi, zotero_key, status]
+    status: [stub, read, extracted]
+    optional: [journal, files, methods, formulations, related, relevance]
+  method:
+    dir: methods
+    required: [category]
+    optional: [instruments, parameters, related, files]
+  experiment:
+    dir: experiments
+    required: [date, status, methods, formulations]
+    status: [planned, running, done, failed]
+    optional: [files, project, question, related]
+  project:
+    dir: projects
+    required: [status]
+    status: [idea, active, paused, done]
+    optional: [repo, related, questions]
+  question:
+    dir: questions
+    required: [status]
+    status: [open, in_progress, answered, parked]
+    optional: [related, data_needs, ideas]
+  idea:
+    dir: ideas
+    required: [status, origin]
+    status: [raw, refined, tested, dropped]
+    optional: [related, question, novelty, feasibility, impact]
+  session:
+    dir: sessions
+    required: [date, source]
+    source: [claude_code, claude_ai, other]
+    optional: [related, ideas, decisions]
+  interest:
+    dir: interests
+    required: []
+    optional: [related]
+  person:
+    dir: people
+    required: []
+    optional: [affiliation, related]

@@ -1,0 +1,9 @@
+kb.sqlite
+kb.sqlite-*
+exports/
+__pycache__/
+.env
+*.pdf
+.obsidian/workspace*
+.zotero_state.json
+sessions/_import/
