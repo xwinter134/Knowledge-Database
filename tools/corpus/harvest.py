@@ -15,8 +15,10 @@ Beispiele:
   python tools/corpus/harvest.py --from 2024-11-11              # alle Anfragen aus corpus/queries.yaml
   python tools/corpus/harvest.py --since-last                   # wöchentlicher Lauf ab letztem Lauf
   python tools/corpus/harvest.py --only peg_immunity --from 2020-01-01
-  python tools/corpus/harvest.py --fulltext xml                 # freie Volltext-XMLs (Europe PMC)
-  python tools/corpus/harvest.py --fulltext pdf --min-relevance 0.5 --limit 200
+  python tools/corpus/harvest.py --fulltext xml --min-relevance 0.5   # kostenlos: XML aus Europe PMC
+  python tools/corpus/harvest.py --fulltext tei --min-relevance 0.5 --limit 100
+                                     # OpenAlex: fertig zerlegtes TEI-XML (GROBID), 0,01 $ je Datei
+  python tools/corpus/harvest.py --fulltext pdf --min-relevance 0.7   # freie PDF-Links der Verlage
   python tools/corpus/harvest.py --stats
 """
 from __future__ import annotations
@@ -39,17 +41,19 @@ REPO = Path(__file__).resolve().parents[2]
 CORPUS = Path(os.environ.get("KB_CORPUS_DIR", Path.home() / "kb-corpus")).expanduser()
 OPENALEX = "https://api.openalex.org/works"
 EPMC = "https://www.ebi.ac.uk/europepmc/webservices/rest"
+CONTENT = "https://content.openalex.org/works"
 UA = "knowledge-database-corpus/0.2 (personal research use)"
 TYPES = "article|review|preprint|letter|book-chapter"
 SELECT = ("id,doi,ids,title,publication_date,publication_year,type,authorships,primary_location,"
-          "open_access,best_oa_location,abstract_inverted_index,cited_by_count,topics,keywords")
+          "open_access,best_oa_location,abstract_inverted_index,cited_by_count,topics,keywords,has_content")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS works(
   id TEXT PRIMARY KEY, doi TEXT, pmid TEXT, pmcid TEXT, title TEXT, abstract TEXT, authors TEXT,
   venue TEXT, pub_date TEXT, year INTEGER, type TEXT, is_oa INTEGER, oa_status TEXT, oa_url TEXT,
   pdf_url TEXT, license TEXT, cited_by INTEGER, topics TEXT, keywords TEXT, tags TEXT,
-  first_seen TEXT, updated TEXT, relevance REAL, triage TEXT, kb_status TEXT);
+  first_seen TEXT, updated TEXT, relevance REAL, triage TEXT, kb_status TEXT,
+  oa_has_tei INTEGER, oa_has_pdf INTEGER);
 CREATE INDEX IF NOT EXISTS works_doi ON works(doi);
 CREATE TABLE IF NOT EXISTS fulltext(
   work_id TEXT, kind TEXT, path TEXT, status TEXT, fetched TEXT, PRIMARY KEY(work_id, kind));
@@ -82,7 +86,7 @@ def http(url: str, params: dict | None = None, headers: dict | None = None, trie
                     sys.exit(f"OpenAlex-Tageskontingent erschöpft, Reset in {wait // 60} min.")
                 time.sleep(wait)
                 continue
-            if e.code in (401, 403) and "openalex" in url:
+            if e.code in (401, 403) and "openalex.org" in url:
                 sys.exit("OpenAlex lehnt den Key ab (401/403). OPENALEX_API_KEY prüfen.")
             if i == tries - 1:
                 raise
@@ -102,10 +106,14 @@ def openalex(params: dict) -> dict:
 
 def connect() -> sqlite3.Connection:
     CORPUS.mkdir(parents=True, exist_ok=True)
-    for d in ("xml", "pdf"):
+    for d in ("xml", "tei", "pdf"):
         (CORPUS / d).mkdir(exist_ok=True)
     con = sqlite3.connect(CORPUS / "corpus.sqlite")
     con.executescript(SCHEMA)
+    cols = {r[1] for r in con.execute("PRAGMA table_info(works)")}
+    for c in ("oa_has_tei", "oa_has_pdf"):          # Migration älterer Datenbanken
+        if c not in cols:
+            con.execute(f"ALTER TABLE works ADD COLUMN {c} INTEGER")
     return con
 
 
@@ -138,6 +146,8 @@ def record(w: dict) -> dict:
         "cited_by": w.get("cited_by_count"),
         "topics": "; ".join(t.get("display_name", "") for t in (w.get("topics") or [])[:5]),
         "keywords": "; ".join(k.get("display_name", "") for k in (w.get("keywords") or [])),
+        "oa_has_tei": int(bool((w.get("has_content") or {}).get("grobid_xml"))),
+        "oa_has_pdf": int(bool((w.get("has_content") or {}).get("pdf"))),
     }
 
 
@@ -207,9 +217,24 @@ def fetch_xml(con, limit, min_rel) -> None:
         progress(con, i, len(rows))
 
 
+def fetch_tei(con, limit, min_rel) -> None:
+    """OpenAlex-Volltext als TEI-XML (von OpenAlex mit GROBID erzeugt). Kostet 0,01 $ je Datei;
+    das freie Tageskontingent (1 $) reicht für ~100 Dateien. Paper mit Europe-PMC-XML werden übersprungen."""
+    rows = con.execute(f"""SELECT w.id FROM works w
+        LEFT JOIN fulltext f ON f.work_id=w.id AND ((f.kind='xml' AND f.status='ok') OR f.kind='tei')
+        WHERE w.oa_has_tei=1 AND f.work_id IS NULL {rel_clause(min_rel)}
+        ORDER BY w.relevance DESC, w.pub_date DESC""").fetchall()[: limit or None]
+    print(f"{len(rows)} TEI-XMLs zu laden (OpenAlex, ca. {len(rows) * 0.01:.2f} $)")
+    key = os.environ.get("OPENALEX_API_KEY", "proxy-injected")
+    for i, (wid,) in enumerate(rows, 1):
+        data = http(f"{CONTENT}/{wid}.grobid-xml", headers={"Authorization": f"Bearer {key}"}, pause=0.1)
+        store(con, wid, "tei", CORPUS / "tei" / f"{wid}.tei.xml", data)
+        progress(con, i, len(rows))
+
+
 def fetch_pdf(con, limit, min_rel) -> None:
     rows = con.execute(f"""SELECT w.id, w.pdf_url FROM works w
-        LEFT JOIN fulltext f ON f.work_id=w.id AND f.kind IN ('xml','pdf') AND f.status='ok'
+        LEFT JOIN fulltext f ON f.work_id=w.id AND f.kind IN ('xml','tei','pdf') AND f.status='ok'
         WHERE w.pdf_url IS NOT NULL AND f.work_id IS NULL {rel_clause(min_rel)}
         ORDER BY w.relevance DESC, w.pub_date DESC""").fetchall()[: limit or None]
     print(f"{len(rows)} PDFs zu laden (Open-Access-Quellen laut OpenAlex)")
@@ -253,6 +278,7 @@ def stats(con) -> None:
     print(f"  Open Access:           {one('SELECT count(*) FROM works WHERE is_oa=1')}")
     print(f"  mit PMCID (XML mögl.): {one('SELECT count(*) FROM works WHERE pmcid IS NOT NULL')}")
     print(f"  mit PDF-Link:          {one('SELECT count(*) FROM works WHERE pdf_url IS NOT NULL')}")
+    print(f"  OpenAlex-TEI verfügb.: {one('SELECT count(*) FROM works WHERE oa_has_tei=1')}")
     for kind, n in con.execute("SELECT kind, count(*) FROM fulltext WHERE status='ok' GROUP BY kind"):
         print(f"  Volltext {kind} geladen:  {n}")
     print(f"  mit Relevanz-Score:    {one('SELECT count(*) FROM works WHERE relevance IS NOT NULL')}")
@@ -273,7 +299,7 @@ def main() -> int:
     ap.add_argument("--to", dest="date_to", default=dt.date.today().isoformat())
     ap.add_argument("--since-last", action="store_true", help="je Anfrage ab dem letzten Lauf (−14 Tage)")
     ap.add_argument("--only", nargs="*", help="nur diese Anfragen aus corpus/queries.yaml")
-    ap.add_argument("--fulltext", choices=["xml", "pdf"], help="Volltexte laden")
+    ap.add_argument("--fulltext", choices=["xml", "tei", "pdf"], help="Volltexte laden")
     ap.add_argument("--min-relevance", type=float, help="Volltexte nur ab diesem Relevanz-Score")
     ap.add_argument("--limit", type=int, help="max. Anzahl Volltexte")
     ap.add_argument("--stats", action="store_true")
@@ -291,6 +317,8 @@ def main() -> int:
             harvest(con, name, " ".join(spec["query"].split()), start, a.date_to)
     if a.fulltext == "xml":
         fetch_xml(con, a.limit, a.min_relevance)
+    elif a.fulltext == "tei":
+        fetch_tei(con, a.limit, a.min_relevance)
     elif a.fulltext == "pdf":
         fetch_pdf(con, a.limit, a.min_relevance)
     if a.stats or not (a.date_from or a.since_last or a.fulltext):

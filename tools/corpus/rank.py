@@ -10,6 +10,7 @@ Die Zotero-Einträge werden in $KB_CORPUS_DIR/zotero_items.jsonl zwischengespeic
   python tools/corpus/rank.py            # Ranking berechnen, Top 25 anzeigen
   python tools/corpus/rank.py --top 50 --since 2026-10-01
   python tools/corpus/rank.py --refresh  # Zotero neu laden
+  python tools/corpus/rank.py --exclude-venue "Nature Methods"   # fachfremde Zotero-Einträge ignorieren
 """
 from __future__ import annotations
 
@@ -66,6 +67,8 @@ def main() -> int:
     ap.add_argument("--refresh", action="store_true")
     ap.add_argument("--top", type=int, default=25)
     ap.add_argument("--since", help="Top-Liste nur ab diesem Erscheinungsdatum")
+    ap.add_argument("--exclude-venue", nargs="*", default=[],
+                    help="Zotero-Einträge dieser Zeitschriften nicht als Positivbeispiele nutzen")
     a = ap.parse_args()
 
     con = sqlite3.connect(CORPUS / "corpus.sqlite")
@@ -80,8 +83,9 @@ def main() -> int:
 
     text = lambda t, ab, kw: f"{t or ''} {t or ''} {ab or ''} {kw or ''}"   # Titel doppelt gewichtet
     # Positive: alle Zotero-Einträge mit Text (auch ältere, die nicht im Korpus sind)
+    excl = {v.lower() for v in a.exclude_venue}
     pos = [text(z.get("title"), z.get("abstractNote"), " ".join(t["tag"] for t in z.get("tags", [])))
-           for z in zot if z.get("title")]
+           for z in zot if z.get("title") and (z.get("publicationTitle") or "").lower() not in excl]
     neg_rows = [r for r, z in zip(rows, in_zot) if not z]
     neg = [text(r[2], r[3], r[4]) for r in neg_rows]
     X_text = pos + neg
