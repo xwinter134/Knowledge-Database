@@ -88,8 +88,12 @@ def main() -> int:
     text = lambda t, ab, kw: f"{t or ''} {t or ''} {ab or ''} {kw or ''}"   # Titel doppelt gewichtet
     # Positive: alle Zotero-Einträge mit Text (auch ältere, die nicht im Korpus sind)
     excl = {v.lower() for v in a.exclude_venue}
+    kb_coll = CONFIG["zotero"].get("collection_key")
+    # Unbestätigte Kandidaten (nur in der KB-Sammlung) nicht als Positivbeispiel lernen,
+    # sonst bestätigt sich das Ranking selbst. In eine eigene Sammlung verschoben = bestätigt.
+    confirmed = [z for z in zot if not (kb_coll and z.get("collections") == [kb_coll])]
     pos = [text(z.get("title"), z.get("abstractNote"), " ".join(t["tag"] for t in z.get("tags", [])))
-           for z in zot if z.get("title") and (z.get("publicationTitle") or "").lower() not in excl]
+           for z in confirmed if z.get("title") and (z.get("publicationTitle") or "").lower() not in excl]
     neg_rows = [r for r, z in zip(rows, in_zot) if not z]
     neg = [text(r[2], r[3], r[4]) for r in neg_rows]
     if len(neg) < 5000 and BACKGROUND.exists():
@@ -117,7 +121,8 @@ def main() -> int:
                     [(round(float(s), 4), r[0]) for s, r in zip(scores, rows)])
     con.commit()
 
-    print(f"Zotero: {len(zot)} Einträge, davon {sum(in_zot)} im Korpus wiedergefunden")
+    print(f"Zotero: {len(zot)} Einträge ({len(zot) - len(confirmed)} unbestätigte Kandidaten), "
+          f"davon {sum(in_zot)} im Korpus wiedergefunden")
     print(f"Modell: {len(pos)} positive, {len(neg)} übrige Paper, Trennschärfe (AUC, Kreuzvalidierung) {auc:.2f}")
     s = np.array(scores)[[not z for z in in_zot]]
     for thr in (0.9, 0.7, 0.5, 0.3):
