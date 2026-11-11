@@ -43,3 +43,16 @@ ZOTERO_USER_ID=… ZOTERO_API_KEY=… python tools/zotero_sync.py   # neue Paper
 
 Das Langformat erlaubt neue Parameter ohne Schemaänderung; `export_dataset.py` pivotiert in eine
 breite Feature-Matrix.
+
+## Korpus (breite Literaturerfassung)
+
+Getrennt von der kuratierten Wissensbasis: automatisch eingesammelte Paper mit Metadaten, Abstracts
+und freien Volltexten. Liegt außerhalb des Repos in `$KB_CORPUS_DIR` (Standard `~/kb-corpus`).
+
+```bash
+python tools/corpus/harvest.py --from 2024-11-11   # Anfragen aus corpus/queries.yaml, wiederholbar
+python tools/corpus/harvest.py --fulltext          # freie Volltext-XMLs (Europe PMC/PMC)
+python tools/corpus/harvest.py --stats
+```
+
+Suchanfragen anpassen in `corpus/queries.yaml`. Relevante Paper wandern später als Stub nach `literature/`.

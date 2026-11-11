@@ -1,0 +1,23 @@
+# Suchanfragen für den Korpus (Europe PMC Syntax, Titel+Abstract).
+# Jede Anfrage bekommt einen Tag; ein Paper kann mehrere Tags haben.
+# Anpassen, dann: python tools/corpus/harvest.py --from 2024-11-11
+queries:
+  rna_delivery:
+    description: RNA-Cargo und Trägersystem
+    query: >-
+      (TITLE_ABS:mRNA OR TITLE_ABS:siRNA OR TITLE_ABS:saRNA OR TITLE_ABS:"self-amplifying RNA"
+       OR TITLE_ABS:"circular RNA" OR TITLE_ABS:circRNA)
+      AND (TITLE_ABS:"lipid nanoparticle" OR TITLE_ABS:"lipid nanoparticles" OR TITLE_ABS:LNP
+       OR TITLE_ABS:liposome OR TITLE_ABS:liposomes OR TITLE_ABS:polyplex OR TITLE_ABS:"cationic polymer")
+  rna_immuno:
+    description: RNA-Vakzine und Immuntherapie
+    query: >-
+      (TITLE_ABS:mRNA OR TITLE_ABS:siRNA OR TITLE_ABS:saRNA OR TITLE_ABS:"self-amplifying RNA")
+      AND (TITLE_ABS:vaccine OR TITLE_ABS:immunotherapy OR TITLE_ABS:"cancer vaccine")
+  lnp_structure:
+    description: Struktur/Biophysik von Lipid-Nanopartikeln
+    query: >-
+      (TITLE_ABS:"lipid nanoparticle" OR TITLE_ABS:"lipid nanoparticles" OR TITLE_ABS:LNP)
+      AND (TITLE_ABS:SAXS OR TITLE_ABS:SANS OR TITLE_ABS:"cryo-EM" OR TITLE_ABS:cryo-TEM
+       OR TITLE_ABS:"small-angle" OR TITLE_ABS:"molecular dynamics" OR TITLE_ABS:morphology
+       OR TITLE_ABS:"internal structure")
