@@ -1,89 +1,124 @@
-# Suchanfragen für den Korpus (Europe PMC Syntax, Titel+Abstract; * = Platzhalter).
-# Abgeleitet aus der Zotero-Bibliothek (656 Einträge, Stand 2026-11-11): häufigste Begriffe und
-# Sammlungen (pH/Ionen/Puffer, LNP-Reifung, Struktur, Anti-PEG, ML).
+# Suchanfragen für den Korpus – OpenAlex-Syntax, gesucht in Titel + Abstract.
+#   AND / OR / NOT, "Phrasen" in Anführungszeichen, Klammern. Keine Kommas verwenden!
+#   OpenAlex normalisiert Wortformen (nanoparticle findet auch nanoparticles).
+# Abgeleitet aus der Zotero-Bibliothek (656 Einträge, Stand 2026-11-11) und nachgeschärft anhand der
+# Zotero-Paper, die eine erste Version nicht gefunden hat (SANS, PEG-Reviews, Prozess, CAR-T, KI).
 # Jede Anfrage vergibt einen Tag; ein Paper kann mehrere Tags haben.
-# Anpassen, dann: python tools/corpus/harvest.py --from 2024-11-11
-
-_bausteine:   # nur Doku, wird nicht abgefragt
-  lnp: TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:LNPs
-  rna: mRNA, siRNA, saRNA, circRNA, "nucleic acid*", "gene editing"
+# Ausführen: python tools/corpus/harvest.py --from 2024-11-11
 
 queries:
   lnp_rna:
     description: LNPs mit RNA-/Nukleinsäure-Cargo (Kernbereich)
     query: >-
-      (TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:LNPs)
-      AND (TITLE_ABS:mRNA OR TITLE_ABS:siRNA OR TITLE_ABS:saRNA OR TITLE_ABS:"self-amplifying RNA"
-       OR TITLE_ABS:circRNA OR TITLE_ABS:"circular RNA" OR TITLE_ABS:"nucleic acid*"
-       OR TITLE_ABS:"gene editing" OR TITLE_ABS:"genome editing" OR TITLE_ABS:CRISPR)
+      ("lipid nanoparticle" OR LNP OR LNPs)
+      AND (mRNA OR siRNA OR saRNA OR "self-amplifying RNA" OR circRNA OR "circular RNA"
+       OR "nucleic acid" OR "gene editing" OR "genome editing" OR CRISPR OR RNA)
 
   ionizable_lipids:
     description: Design und Struktur-Wirkung ionisierbarer Lipide
     query: >-
-      TITLE_ABS:"ionizable lipid*" OR TITLE_ABS:"ionisable lipid*" OR TITLE_ABS:"ionizable cationic lipid*"
-      OR TITLE_ABS:"amino lipid*" OR TITLE_ABS:"lipidoid*"
+      "ionizable lipid" OR "ionisable lipid" OR "ionizable cationic lipid" OR "ionizable amino lipid"
+      OR "amino lipid" OR lipidoid
 
   peg_immunity:
-    description: PEG, Anti-PEG-Antikörper, ABC-Effekt, Hypersensitivität
+    description: PEG, PEG-Lipide, Anti-PEG-Antikörper, ABC-Effekt, Hypersensitivität, PEG-Alternativen
     query: >-
-      TITLE_ABS:"anti-PEG" OR TITLE_ABS:"accelerated blood clearance"
-      OR ((TITLE_ABS:PEG OR TITLE_ABS:PEGylated OR TITLE_ABS:"polyethylene glycol" OR TITLE_ABS:"PEG-lipid*")
-          AND (TITLE_ABS:antibod* OR TITLE_ABS:immunogenicity OR TITLE_ABS:hypersensitivity
-               OR TITLE_ABS:anaphyla* OR TITLE_ABS:"complement activation" OR TITLE_ABS:CARPA)
-          AND (TITLE_ABS:nanoparticle* OR TITLE_ABS:liposom* OR TITLE_ABS:LNP OR TITLE_ABS:vaccine*))
+      "anti-PEG" OR "accelerated blood clearance" OR "PEG immunogenicity" OR "PEG-lipid" OR "PEG lipid"
+      OR ((PEG OR PEGylated OR PEGylation OR "polyethylene glycol" OR "poly(ethylene glycol)")
+          AND ("lipid nanoparticle" OR LNP OR nanomedicine OR liposome OR nanoparticle OR vaccine)
+          AND (antibody OR immunogenicity OR hypersensitivity OR anaphylaxis OR "complement activation"
+               OR CARPA OR alternative OR alternatives OR dilemma))
 
   lnp_structure:
-    description: Struktur und Biophysik von LNPs und Liposomen
+    description: Struktur und Biophysik von LNPs, Liposomen und Lipidphasen
     query: >-
-      (TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:LNPs OR TITLE_ABS:liposom*
-       OR TITLE_ABS:lipoplex* OR TITLE_ABS:cubosome*)
-      AND (TITLE_ABS:SAXS OR TITLE_ABS:SANS OR TITLE_ABS:"small-angle" OR TITLE_ABS:"cryo-EM"
-       OR TITLE_ABS:"cryo-TEM" OR TITLE_ABS:"cryogenic transmission electron" OR TITLE_ABS:"molecular dynamics"
-       OR TITLE_ABS:"inverse hexagonal" OR TITLE_ABS:"cubic phase" OR TITLE_ABS:"internal structure"
-       OR TITLE_ABS:"phase behavior" OR TITLE_ABS:"phase behaviour" OR TITLE_ABS:morphology
-       OR TITLE_ABS:"neutron reflectometry" OR TITLE_ABS:"structure-function")
+      ("lipid nanoparticle" OR LNP OR LNPs OR liposome OR lipoplex OR cubosome OR "lipid phase" OR "lipid mesophase")
+      AND (SAXS OR SANS OR "small-angle" OR "neutron scattering" OR "X-ray scattering" OR "cryo-EM" OR "cryo-TEM"
+       OR "cryogenic electron" OR "molecular dynamics" OR "coarse-grained" OR simulation
+       OR "inverse hexagonal" OR "cubic phase" OR bicontinuous OR "membrane curvature" OR "internal structure"
+       OR "phase behavior" OR "phase behaviour" OR morphology OR nanoarchitecture OR hydration
+       OR "neutron reflectometry" OR "structure-function" OR "structure-activity")
 
   lnp_ph_ions:
     description: pH, Puffer, Gegenionen, Salze, Reifung (Kernsammlungen)
     query: >-
-      (TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:LNPs OR TITLE_ABS:"ionizable lipid*")
-      AND (TITLE_ABS:pH OR TITLE_ABS:pKa OR TITLE_ABS:buffer* OR TITLE_ABS:counterion* OR TITLE_ABS:"counter-ion*"
-       OR TITLE_ABS:salt* OR TITLE_ABS:"ionic strength" OR TITLE_ABS:ion OR TITLE_ABS:ions
-       OR TITLE_ABS:protonation OR TITLE_ABS:maturation OR TITLE_ABS:dialysis OR TITLE_ABS:"buffer exchange")
+      ("lipid nanoparticle" OR LNP OR LNPs OR "ionizable lipid")
+      AND (pH OR pKa OR buffer OR counterion OR "counter-ion" OR salt OR "ionic strength" OR ion OR ions
+       OR protonation OR maturation OR dialysis OR "buffer exchange" OR "molecular exchange")
 
-  lnp_stability:
-    description: Stabilität, Lagerung, Lyophilisation, Aggregation
+  lnp_stability_quality:
+    description: Stabilität, Lagerung, Lyophilisation, Aggregation, Analytik, Verunreinigungen
     query: >-
-      (TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:LNPs OR TITLE_ABS:"mRNA vaccine*")
-      AND (TITLE_ABS:stability OR TITLE_ABS:storage OR TITLE_ABS:lyophiliz* OR TITLE_ABS:"freeze-dr*"
-       OR TITLE_ABS:"freeze-thaw" OR TITLE_ABS:aggregation OR TITLE_ABS:"shelf life" OR TITLE_ABS:degradation)
+      ("lipid nanoparticle" OR LNP OR LNPs OR "mRNA vaccine" OR "mRNA-LNP")
+      AND (stability OR storage OR lyophilization OR lyophilisation OR "freeze-drying" OR "freeze-thaw"
+       OR aggregation OR "shelf life" OR degradation OR adduct OR impurity OR "lipid oxidation"
+       OR "critical quality attribute" OR analytical OR characterization)
+
+  lnp_process:
+    description: Herstellung, Mischung, Fällung, Prozessmodellierung, Scale-up
+    query: >-
+      ("lipid nanoparticle" OR LNP OR LNPs OR liposome)
+      AND (manufacturing OR microfluidic OR mixing OR "T-junction" OR precipitation OR nanoprecipitation
+       OR "population balance" OR "process parameter" OR "scale-up" OR "continuous manufacturing"
+       OR "self-assembly" OR "formation mechanism")
 
   delivery_mechanism:
-    description: Endosomen-Austritt, Aufnahme, Proteinkorona, Biodistribution
+    description: Endosomen-Austritt, Aufnahme, Proteinkorona, Biodistribution, Targeting
     query: >-
-      (TITLE_ABS:"endosomal escape" OR TITLE_ABS:"protein corona" OR TITLE_ABS:"membrane fusion"
-       OR TITLE_ABS:biodistribution OR TITLE_ABS:"extrahepatic" OR TITLE_ABS:"organ-selective"
-       OR TITLE_ABS:"cellular uptake")
-      AND (TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:LNPs OR TITLE_ABS:mRNA OR TITLE_ABS:siRNA)
+      ("endosomal escape" OR "protein corona" OR "membrane fusion" OR biodistribution OR extrahepatic
+       OR "organ-selective" OR "cellular uptake" OR "targeted delivery" OR "cell-specific")
+      AND ("lipid nanoparticle" OR LNP OR LNPs OR "mRNA delivery" OR "siRNA delivery" OR "nucleic acid delivery"
+       OR "RNA delivery" OR lipoplex OR polyplex)
+
+  rna_therapeutics:
+    description: RNA-Therapeutika allgemein (Reviews, Klinik, Design)
+    query: >-
+      "mRNA therapeutic" OR "mRNA therapeutics" OR "mRNA therapy" OR "mRNA medicine" OR "RNA therapeutics"
+      OR "RNA medicine" OR "mRNA design" OR "mRNA delivery" OR "RNA delivery" OR "nucleic acid delivery"
+      OR "nucleic acid therapeutics"
 
   rna_vaccines_immuno:
-    description: RNA-Vakzine, Krebsvakzine, angeborene Immunität, Reaktogenität
+    description: RNA-Vakzine, Immuntherapie, angeborene Immunität, Reaktogenität, in-vivo-CAR
     query: >-
-      (TITLE_ABS:mRNA OR TITLE_ABS:saRNA OR TITLE_ABS:"self-amplifying RNA" OR TITLE_ABS:circRNA OR TITLE_ABS:siRNA)
-      AND (TITLE_ABS:vaccine* OR TITLE_ABS:immunotherapy OR TITLE_ABS:"cancer vaccine*" OR TITLE_ABS:neoantigen*
-       OR TITLE_ABS:adjuvant* OR TITLE_ABS:reactogenicity OR TITLE_ABS:"innate immun*" OR TITLE_ABS:"in vivo CAR")
+      (mRNA OR saRNA OR "self-amplifying RNA" OR circRNA OR "RNA vaccine" OR "RNA neoantigen")
+      AND (vaccine OR immunotherapy OR neoantigen OR adjuvant OR reactogenicity OR "innate immune"
+       OR "CAR T" OR "CAR-T" OR "chimeric antigen receptor" OR immunogenicity)
+      AND ("lipid nanoparticle" OR LNP OR formulation OR delivery OR adjuvant OR "innate immune" OR "T cell"
+       OR "CAR T" OR "CAR-T" OR "chimeric antigen receptor" OR neoantigen OR mechanism OR design)
+      NOT (hesitancy OR acceptance OR "vaccination coverage" OR survey OR "vaccine effectiveness" OR "real-world")
+
+  cancer_vaccines:
+    description: Krebsvakzine und Nanomedizin in der Immunonkologie (auch ohne RNA)
+    query: >-
+      "cancer vaccine" OR "tumor vaccine" OR "tumour vaccine" OR "neoantigen vaccine"
+      OR "personalized cancer vaccine" OR "in situ vaccination"
+      OR (("therapeutic vaccine" OR immunotherapy) AND ("lipid nanoparticle" OR LNP OR liposome OR mRNA))
 
   ml_formulation:
-    description: ML, Bayes'sche Optimierung, DoE, Hochdurchsatz für Formulierungen
+    description: ML, Bayes'sche Optimierung, DoE, Hochdurchsatz für Formulierungen und Materialien
     query: >-
-      (TITLE_ABS:"machine learning" OR TITLE_ABS:"deep learning" OR TITLE_ABS:"Bayesian optimization"
-       OR TITLE_ABS:"design of experiments" OR TITLE_ABS:"high-throughput screening" OR TITLE_ABS:"active learning")
-      AND (TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:"ionizable lipid*" OR TITLE_ABS:liposom*
-       OR TITLE_ABS:"nucleic acid delivery" OR TITLE_ABS:"mRNA delivery" OR TITLE_ABS:polyplex*)
+      ("machine learning" OR "deep learning" OR "Bayesian optimization" OR "design of experiments"
+       OR "high-throughput screening" OR "active learning" OR "computational design" OR "generative model")
+      AND ("lipid nanoparticle" OR LNP OR "ionizable lipid" OR liposome OR "nucleic acid delivery"
+       OR "mRNA delivery" OR "gene delivery" OR polyplex OR "nanoparticle formulation" OR "lipid formulation"
+       OR "drug formulation" OR "drug delivery system")
+
+  bayesian_optimization:
+    description: Methodik Bayes'sche Optimierung (auch allgemein, für eigene Experimente)
+    query: >-
+      "Bayesian optimization" AND ("high-dimensional" OR "high dimensions" OR "experimental design"
+       OR "self-driving" OR materials OR chemistry OR formulation OR "multi-objective")
+
+  ai_discovery:
+    description: KI-Systeme für wissenschaftliche Entdeckung, autonome Labore
+    query: >-
+      "self-driving laboratory" OR "self-driving lab" OR "autonomous laboratory" OR "autonomous experimentation"
+      OR "AI scientist" OR "co-scientist"
+      OR ("scientific discovery" AND ("large language model" OR "multi-agent" OR "AI system" OR "AI agent"))
 
   other_carriers:
-    description: Andere Träger für Nukleinsäuren (Polymere, Lipoplexe, Cubosomen, EVs)
+    description: Andere Träger für Nukleinsäuren (Polymere, Lipoplexe, Cubosomen, EVs, Hybride)
     query: >-
-      (TITLE_ABS:polyplex* OR TITLE_ABS:"cationic polymer*" OR TITLE_ABS:"poly(beta-amino ester)*" OR TITLE_ABS:PBAE
-       OR TITLE_ABS:lipoplex* OR TITLE_ABS:cubosome* OR TITLE_ABS:"extracellular vesicle*" OR TITLE_ABS:"lipid-polymer hybrid")
-      AND (TITLE_ABS:mRNA OR TITLE_ABS:siRNA OR TITLE_ABS:"nucleic acid*" OR TITLE_ABS:"gene delivery" OR TITLE_ABS:DNA)
+      (polyplex OR "cationic polymer" OR "poly(beta-amino ester)" OR PBAE OR lipoplex OR cubosome
+       OR "extracellular vesicle" OR "lipid-polymer hybrid" OR "polymeric nanoparticle" OR dendrimer)
+      AND (mRNA OR siRNA OR "nucleic acid delivery" OR "gene delivery" OR transfection OR plasmid)

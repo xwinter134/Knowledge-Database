@@ -46,13 +46,18 @@ breite Feature-Matrix.
 
 ## Korpus (breite Literaturerfassung)
 
-Getrennt von der kuratierten Wissensbasis: automatisch eingesammelte Paper mit Metadaten, Abstracts
-und freien Volltexten. Liegt außerhalb des Repos in `$KB_CORPUS_DIR` (Standard `~/kb-corpus`).
+Getrennt von der kuratierten Wissensbasis: automatisch eingesammelte Paper. **OpenAlex** ist die Quelle
+für Suche und Metadaten; lokal liegen nur IDs, Titel/Abstract-Cache, Relevanz, Status und Volltexte.
+Speicherort außerhalb des Repos: `$KB_CORPUS_DIR` (Standard `~/kb-corpus`).
 
 ```bash
-python tools/corpus/harvest.py --from 2024-11-11   # Anfragen aus corpus/queries.yaml, wiederholbar
-python tools/corpus/harvest.py --fulltext          # freie Volltext-XMLs (Europe PMC/PMC)
+export OPENALEX_API_KEY=…   ZOTERO_USER_ID=…   ZOTERO_API_KEY=…
+python tools/corpus/harvest.py --from 2024-11-11     # Erstbefüllung (Anfragen aus corpus/queries.yaml)
+python tools/corpus/harvest.py --since-last          # wöchentlich
+python tools/corpus/rank.py                          # Relevanz aus Zotero lernen, Top-Kandidaten zeigen
+python tools/corpus/harvest.py --fulltext xml --min-relevance 0.5   # freie XML-Volltexte (Europe PMC)
+python tools/corpus/harvest.py --fulltext pdf --min-relevance 0.7   # Open-Access-PDFs (für GROBID)
 python tools/corpus/harvest.py --stats
 ```
 
-Suchanfragen anpassen in `corpus/queries.yaml`. Relevante Paper wandern später als Stub nach `literature/`.
+Suchanfragen in `corpus/queries.yaml` (OpenAlex-Syntax, keine Kommas).
