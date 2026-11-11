@@ -59,3 +59,19 @@ driveId `352A4C8A7A3FF5C5`, Wurzelordner `Knowledge-Database`
 | `datasets` | `352A4C8A7A3FF5C5!s7b04f58c38a64cd5a9e65ce683030529` | Exportierte ML-Datensätze (Snapshots) |
 | `figures` | `352A4C8A7A3FF5C5!s251343c6be924e1bbfa97989fa5bf056` | Abbildungen |
 | `backups` | `352A4C8A7A3FF5C5!sb437024e236d4968aad1f3616ab50e21` | z. B. `kb.sqlite`-Snapshots, Zotero-Export |
+
+## Korpus (breite Literaturerfassung, `tools/corpus/`)
+
+- **OpenAlex** = Quelle für Suche/Metadaten (Key für api.openalex.org und content.openalex.org,
+  in Cloud-Sessions vom Proxy gesetzt). Interaktive Fragen über den OpenAlex-Connector.
+- Suchanfragen: `corpus/queries.yaml`; Einstellungen: `corpus/config.yaml`.
+- Ranking (`rank.py`) lernt aus der Zotero-Bibliothek (User 16358383); `corpus/background.jsonl.gz`
+  ist eine feste Stichprobe als Negativbeispiele.
+- Übertragene Paper landen in der Zotero-Sammlung „KB Korpus-Kandidaten“; Protokoll in
+  `corpus/state/zotero_pushed.csv` (nie manuell löschen, sonst Duplikate).
+- **Wochenlauf** (geplanter Task, montags): `python tools/corpus/weekly.py` → Bericht
+  `corpus/digests/<JJJJ>-W<KW>.md`. Danach Abschnitt „Einordnung“ ausfüllen: Themen und Trends, Bezug zu
+  `questions/` und `ideas/`, auffällige Paper (neue Methoden, Widersprüche, ML-taugliche Datensätze).
+  Nur auf Titel und Abstracts stützen, nichts erfinden. Dann committen und pushen.
+- Volltexte: zuerst kostenloses XML von Europe PMC (`--fulltext xml`), sonst OpenAlex-TEI für
+  0,01 $ pro Datei (`--fulltext tei`, ~100 pro Tag im Gratis-Kontingent).

@@ -24,12 +24,16 @@ import urllib.request
 from pathlib import Path
 
 import numpy as np
+import yaml
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import roc_auc_score
 
 CORPUS = Path(os.environ.get("KB_CORPUS_DIR", Path.home() / "kb-corpus")).expanduser()
+REPO = Path(__file__).resolve().parents[2]
+CONFIG = yaml.safe_load((REPO / "corpus" / "config.yaml").read_text(encoding="utf-8"))
+BACKGROUND = REPO / "corpus" / "background.jsonl.gz"   # feste Stichprobe als Negativbeispiele
 CACHE = CORPUS / "zotero_items.jsonl"
 SKIP = {"attachment", "note", "annotation"}
 
@@ -41,7 +45,7 @@ def norm_title(t: str | None) -> str:
 def load_zotero(refresh: bool) -> list[dict]:
     if CACHE.exists() and not refresh:
         return [json.loads(l) for l in CACHE.open(encoding="utf-8")]
-    uid = os.environ.get("ZOTERO_USER_ID")
+    uid = os.environ.get("ZOTERO_USER_ID") or str(CONFIG["zotero"]["user_id"])
     key = os.environ.get("ZOTERO_API_KEY", "proxy-injected")
     if not uid:
         sys.exit("ZOTERO_USER_ID setzen (Zahl von zotero.org/settings/keys).")
@@ -67,7 +71,7 @@ def main() -> int:
     ap.add_argument("--refresh", action="store_true")
     ap.add_argument("--top", type=int, default=25)
     ap.add_argument("--since", help="Top-Liste nur ab diesem Erscheinungsdatum")
-    ap.add_argument("--exclude-venue", nargs="*", default=[],
+    ap.add_argument("--exclude-venue", nargs="*", default=CONFIG["ranking"]["exclude_venues"],
                     help="Zotero-Einträge dieser Zeitschriften nicht als Positivbeispiele nutzen")
     a = ap.parse_args()
 
@@ -88,6 +92,12 @@ def main() -> int:
            for z in zot if z.get("title") and (z.get("publicationTitle") or "").lower() not in excl]
     neg_rows = [r for r, z in zip(rows, in_zot) if not z]
     neg = [text(r[2], r[3], r[4]) for r in neg_rows]
+    if len(neg) < 5000 and BACKGROUND.exists():
+        # Kleiner Korpus (z. B. Wochenlauf): mit fester Hintergrund-Stichprobe auffüllen
+        import gzip
+        with gzip.open(BACKGROUND, "rt", encoding="utf-8") as f:
+            neg += [text(b.get("title"), b.get("abstract"), b.get("keywords")) for b in map(json.loads, f)
+                    if b.get("doi") not in zdois and norm_title(b.get("title")) not in ztitles]
     X_text = pos + neg
     y = np.array([1] * len(pos) + [0] * len(neg))
 

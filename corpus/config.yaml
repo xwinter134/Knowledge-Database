@@ -1,0 +1,13 @@
+# Einstellungen für Ranking, Zotero-Übergabe und Wochenlauf
+ranking:
+  # Zotero-Einträge dieser Zeitschriften nicht als Forschungsinteresse lernen
+  exclude_venues: ["Nature Methods"]
+zotero:
+  user_id: 16358383
+  collection: "KB Korpus-Kandidaten"     # wird bei Bedarf angelegt
+  min_relevance: 0.5                      # ab diesem Score landet ein Paper in Zotero
+  max_per_run: 60                         # Obergrenze pro Wochenlauf
+  tag: "kb-korpus"
+weekly:
+  lookback_days: 21                       # überlappend, weil OpenAlex Paper verzögert aufnimmt
+  digest_top: 15
