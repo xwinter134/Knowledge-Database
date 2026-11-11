@@ -1,23 +1,89 @@
-# Suchanfragen für den Korpus (Europe PMC Syntax, Titel+Abstract).
-# Jede Anfrage bekommt einen Tag; ein Paper kann mehrere Tags haben.
+# Suchanfragen für den Korpus (Europe PMC Syntax, Titel+Abstract; * = Platzhalter).
+# Abgeleitet aus der Zotero-Bibliothek (656 Einträge, Stand 2026-11-11): häufigste Begriffe und
+# Sammlungen (pH/Ionen/Puffer, LNP-Reifung, Struktur, Anti-PEG, ML).
+# Jede Anfrage vergibt einen Tag; ein Paper kann mehrere Tags haben.
 # Anpassen, dann: python tools/corpus/harvest.py --from 2024-11-11
+
+_bausteine:   # nur Doku, wird nicht abgefragt
+  lnp: TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:LNPs
+  rna: mRNA, siRNA, saRNA, circRNA, "nucleic acid*", "gene editing"
+
 queries:
-  rna_delivery:
-    description: RNA-Cargo und Trägersystem
+  lnp_rna:
+    description: LNPs mit RNA-/Nukleinsäure-Cargo (Kernbereich)
     query: >-
-      (TITLE_ABS:mRNA OR TITLE_ABS:siRNA OR TITLE_ABS:saRNA OR TITLE_ABS:"self-amplifying RNA"
-       OR TITLE_ABS:"circular RNA" OR TITLE_ABS:circRNA)
-      AND (TITLE_ABS:"lipid nanoparticle" OR TITLE_ABS:"lipid nanoparticles" OR TITLE_ABS:LNP
-       OR TITLE_ABS:liposome OR TITLE_ABS:liposomes OR TITLE_ABS:polyplex OR TITLE_ABS:"cationic polymer")
-  rna_immuno:
-    description: RNA-Vakzine und Immuntherapie
+      (TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:LNPs)
+      AND (TITLE_ABS:mRNA OR TITLE_ABS:siRNA OR TITLE_ABS:saRNA OR TITLE_ABS:"self-amplifying RNA"
+       OR TITLE_ABS:circRNA OR TITLE_ABS:"circular RNA" OR TITLE_ABS:"nucleic acid*"
+       OR TITLE_ABS:"gene editing" OR TITLE_ABS:"genome editing" OR TITLE_ABS:CRISPR)
+
+  ionizable_lipids:
+    description: Design und Struktur-Wirkung ionisierbarer Lipide
     query: >-
-      (TITLE_ABS:mRNA OR TITLE_ABS:siRNA OR TITLE_ABS:saRNA OR TITLE_ABS:"self-amplifying RNA")
-      AND (TITLE_ABS:vaccine OR TITLE_ABS:immunotherapy OR TITLE_ABS:"cancer vaccine")
+      TITLE_ABS:"ionizable lipid*" OR TITLE_ABS:"ionisable lipid*" OR TITLE_ABS:"ionizable cationic lipid*"
+      OR TITLE_ABS:"amino lipid*" OR TITLE_ABS:"lipidoid*"
+
+  peg_immunity:
+    description: PEG, Anti-PEG-Antikörper, ABC-Effekt, Hypersensitivität
+    query: >-
+      TITLE_ABS:"anti-PEG" OR TITLE_ABS:"accelerated blood clearance"
+      OR ((TITLE_ABS:PEG OR TITLE_ABS:PEGylated OR TITLE_ABS:"polyethylene glycol" OR TITLE_ABS:"PEG-lipid*")
+          AND (TITLE_ABS:antibod* OR TITLE_ABS:immunogenicity OR TITLE_ABS:hypersensitivity
+               OR TITLE_ABS:anaphyla* OR TITLE_ABS:"complement activation" OR TITLE_ABS:CARPA)
+          AND (TITLE_ABS:nanoparticle* OR TITLE_ABS:liposom* OR TITLE_ABS:LNP OR TITLE_ABS:vaccine*))
+
   lnp_structure:
-    description: Struktur/Biophysik von Lipid-Nanopartikeln
+    description: Struktur und Biophysik von LNPs und Liposomen
     query: >-
-      (TITLE_ABS:"lipid nanoparticle" OR TITLE_ABS:"lipid nanoparticles" OR TITLE_ABS:LNP)
-      AND (TITLE_ABS:SAXS OR TITLE_ABS:SANS OR TITLE_ABS:"cryo-EM" OR TITLE_ABS:cryo-TEM
-       OR TITLE_ABS:"small-angle" OR TITLE_ABS:"molecular dynamics" OR TITLE_ABS:morphology
-       OR TITLE_ABS:"internal structure")
+      (TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:LNPs OR TITLE_ABS:liposom*
+       OR TITLE_ABS:lipoplex* OR TITLE_ABS:cubosome*)
+      AND (TITLE_ABS:SAXS OR TITLE_ABS:SANS OR TITLE_ABS:"small-angle" OR TITLE_ABS:"cryo-EM"
+       OR TITLE_ABS:"cryo-TEM" OR TITLE_ABS:"cryogenic transmission electron" OR TITLE_ABS:"molecular dynamics"
+       OR TITLE_ABS:"inverse hexagonal" OR TITLE_ABS:"cubic phase" OR TITLE_ABS:"internal structure"
+       OR TITLE_ABS:"phase behavior" OR TITLE_ABS:"phase behaviour" OR TITLE_ABS:morphology
+       OR TITLE_ABS:"neutron reflectometry" OR TITLE_ABS:"structure-function")
+
+  lnp_ph_ions:
+    description: pH, Puffer, Gegenionen, Salze, Reifung (Kernsammlungen)
+    query: >-
+      (TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:LNPs OR TITLE_ABS:"ionizable lipid*")
+      AND (TITLE_ABS:pH OR TITLE_ABS:pKa OR TITLE_ABS:buffer* OR TITLE_ABS:counterion* OR TITLE_ABS:"counter-ion*"
+       OR TITLE_ABS:salt* OR TITLE_ABS:"ionic strength" OR TITLE_ABS:ion OR TITLE_ABS:ions
+       OR TITLE_ABS:protonation OR TITLE_ABS:maturation OR TITLE_ABS:dialysis OR TITLE_ABS:"buffer exchange")
+
+  lnp_stability:
+    description: Stabilität, Lagerung, Lyophilisation, Aggregation
+    query: >-
+      (TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:LNPs OR TITLE_ABS:"mRNA vaccine*")
+      AND (TITLE_ABS:stability OR TITLE_ABS:storage OR TITLE_ABS:lyophiliz* OR TITLE_ABS:"freeze-dr*"
+       OR TITLE_ABS:"freeze-thaw" OR TITLE_ABS:aggregation OR TITLE_ABS:"shelf life" OR TITLE_ABS:degradation)
+
+  delivery_mechanism:
+    description: Endosomen-Austritt, Aufnahme, Proteinkorona, Biodistribution
+    query: >-
+      (TITLE_ABS:"endosomal escape" OR TITLE_ABS:"protein corona" OR TITLE_ABS:"membrane fusion"
+       OR TITLE_ABS:biodistribution OR TITLE_ABS:"extrahepatic" OR TITLE_ABS:"organ-selective"
+       OR TITLE_ABS:"cellular uptake")
+      AND (TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:LNPs OR TITLE_ABS:mRNA OR TITLE_ABS:siRNA)
+
+  rna_vaccines_immuno:
+    description: RNA-Vakzine, Krebsvakzine, angeborene Immunität, Reaktogenität
+    query: >-
+      (TITLE_ABS:mRNA OR TITLE_ABS:saRNA OR TITLE_ABS:"self-amplifying RNA" OR TITLE_ABS:circRNA OR TITLE_ABS:siRNA)
+      AND (TITLE_ABS:vaccine* OR TITLE_ABS:immunotherapy OR TITLE_ABS:"cancer vaccine*" OR TITLE_ABS:neoantigen*
+       OR TITLE_ABS:adjuvant* OR TITLE_ABS:reactogenicity OR TITLE_ABS:"innate immun*" OR TITLE_ABS:"in vivo CAR")
+
+  ml_formulation:
+    description: ML, Bayes'sche Optimierung, DoE, Hochdurchsatz für Formulierungen
+    query: >-
+      (TITLE_ABS:"machine learning" OR TITLE_ABS:"deep learning" OR TITLE_ABS:"Bayesian optimization"
+       OR TITLE_ABS:"design of experiments" OR TITLE_ABS:"high-throughput screening" OR TITLE_ABS:"active learning")
+      AND (TITLE_ABS:"lipid nanoparticle*" OR TITLE_ABS:LNP OR TITLE_ABS:"ionizable lipid*" OR TITLE_ABS:liposom*
+       OR TITLE_ABS:"nucleic acid delivery" OR TITLE_ABS:"mRNA delivery" OR TITLE_ABS:polyplex*)
+
+  other_carriers:
+    description: Andere Träger für Nukleinsäuren (Polymere, Lipoplexe, Cubosomen, EVs)
+    query: >-
+      (TITLE_ABS:polyplex* OR TITLE_ABS:"cationic polymer*" OR TITLE_ABS:"poly(beta-amino ester)*" OR TITLE_ABS:PBAE
+       OR TITLE_ABS:lipoplex* OR TITLE_ABS:cubosome* OR TITLE_ABS:"extracellular vesicle*" OR TITLE_ABS:"lipid-polymer hybrid")
+      AND (TITLE_ABS:mRNA OR TITLE_ABS:siRNA OR TITLE_ABS:"nucleic acid*" OR TITLE_ABS:"gene delivery" OR TITLE_ABS:DNA)
